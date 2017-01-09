@@ -1,0 +1,34 @@
+language: c
+
+env:
+  - PPA=avsm/ocaml41+opam12 SWITCH=system
+  - PPA=avsm/ocaml42+opam12 SWITCH=system
+  - PPA=avsm/ocaml42+opam12 SWITCH=4.03.0
+  - PPA=avsm/ocaml42+opam12 SWITCH=4.04.0+flambda DOCS=yes COVERALLS=yes
+
+before_script:
+  - sudo add-apt-repository -y ppa:$PPA
+  - sudo apt-get update
+  - sudo apt-get install ocaml-nox opam
+  - "opam init -y --compiler=$SWITCH"
+  - eval `opam config env`
+  - ocaml -version
+
+script:
+  - opam install -y ounit lwt js_of_ocaml
+  - "[ -z $DOCS ] || opam install -y lambdasoup"
+  - "[ -z $COVERALLS ] || opam install -y bisect_ppx ocveralls"
+  - make install
+  - make dependency-test
+  - make test
+  - make performance-test
+  - make js-test
+  - "[ -z $DOCS ] || make docs"
+  - "[ -z $COVERALLS ] || ocveralls --prefix _build bisect*.out --send"
+
+notifications:
+  email:
+    recipients:
+      - antonbachin@yahoo.com
+    on_success: always
+    on_failure: always
